@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from bmi_calculator import BMICalculator
+from diabetes_dataset import DiabetesDataset
 
 # page configuration
 st.set_page_config(
@@ -25,16 +27,18 @@ st.markdown(
 page = st.sidebar.selectbox(
     "Select a page:",
     ["Home", "Data Overview", "BMI Calculator",
-        "Statistical Analysis & Insights", "About"]
+     "Statistical Analysis & Insights", "About"]
 )
 
 # load data
 
+# streamlit cache to optimize data loading
+
 
 @st.cache_data
+# function to load data
 def load_data():
-    df = pd.read_csv("./data/processed/diabetes_cleaned.csv")
-    return df
+    return DiabetesDataset("./data/processed/diabetes_cleaned.csv")
 
 
 try:
@@ -50,23 +54,20 @@ try:
         # Display basic stats
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total Records", len(df))
+            st.metric("Total Records", df.get_record_count())
         with col2:
-            st.metric("Features", len(df.columns))
+            st.metric("Features", df.get_feature_count())
         with col3:
-            missing = df.isnull().sum().sum()
-            total = len(df) * len(df.columns)
-            quality = (1 - missing / total) * 100
-            st.metric("Data Quality", f"{quality:.1f}%")
+            st.metric("Data Quality", f"{df.get_data_quality()}%")
     elif page == "Data Overview":
         st.header("Data Overview")
 
         # st.header("Dataset Preview")
-        st.dataframe(df.head(10), use_container_width=True)
+        st.dataframe(df.get_preview(10), use_container_width=True)
 
         # Show statistics
         st.subheader("Statistical Summary")
-        st.dataframe(df.describe(), use_container_width=True)
+        st.dataframe(df.get_summary(), use_container_width=True)
 
     elif page == "BMI Calculator":
         st.header("🧮 BMI Calculator")
@@ -80,19 +81,22 @@ try:
                 "Enter your height (m)", min_value=0.5, max_value=2.5, value=1.7, step=0.01)
 
         if st.button("Calculate BMI"):
-            bmi = weight / (height ** 2)
+            # create instance of BMICalculator
+            calc = BMICalculator(weight=weight, height=height)
+            bmi = calc.calculate_bmi()
+            category = calc.get_category()
 
             with col2:
                 st.metric("Your BMI", f"{bmi:.2f}")
 
-                if bmi < 18.5:
-                    st.info("Category: Underweight")
-                elif 18.5 <= bmi < 25:
-                    st.success("Category: Normal weight")
-                elif 25 <= bmi < 30:
-                    st.warning("Category: Overweight")
+                if category == "Underweight":
+                    st.info(f"Category: {category}")
+                elif category == "Normal weight":
+                    st.success(f"Category: {category}")
+                elif category == "Overweight":
+                    st.warning(f"Category: {category}")
                 else:
-                    st.error("Category: Obese")
+                    st.error(f"Category: {category}")
 
     elif page == "Analysis & Insights":
         st.header("📈 Analysis & Insights")
