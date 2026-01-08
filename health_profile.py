@@ -5,9 +5,7 @@ from typing import Dict, List, Optional, Tuple
 # ============================================================
 # VALIDATION RANGES
 # ============================================================
-# These come from YOUR data cleaning knowledge!
-# Remember discovering that zeros in glucose, blood pressure, etc.
-# were actually missing values, not real measurements?
+# These come from the raw data cleaning.
 # These ranges define what's "realistic" for each measurement.
 
 VALID_RANGES = {
